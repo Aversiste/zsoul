@@ -1,4 +1,4 @@
-#!/usr/local/bin/zsh
+#!/usr/bin/env zsh
 # Copyright (c) 2011 Tristan Le Guern <tristan.le-guern@epitech.eu>
 #
 # Permission to use, copy, modify, and distribute this software for any                                                                                                             
@@ -13,33 +13,54 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF                                                                                                           
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.                                                                                                                    
 
+#set -x
 emulate -L zsh
 setopt no_sh_word_split null_glob no_ksh_arrays
 zmodload zsh/net/tcp
 
-function zs_parse_option {
-	o_location=(-l "Dans ton cul")
-	o_data=(-m "zsh est cool")
-	o_log=(-o /tmp/zsoul.log)
-	o_port=(-p 4242)
-	o_server=(-s "ns-server.epita.fr")
-	debug=0
-	
+#XXX: Real check of system type
+system=linux
+
+typeset -A gl_option
+gl_option[login]=""
+gl_option[pass]=""
+gl_option[log]="/tmp/zsoul.log"
+gl_option[host]="ns-server.epita.fr"
+gl_option[port]="4242"
+gl_option[data]="ZSHAIL"
+gl_option[location]="Dans ton anus"
+gl_option[conf]=""
+gl_option[debug]="0"
+
+function zs_option_env {
+	if [[ "$LOGNAME" != "" ]] gl_option[login]=$LOGNAME
+	if [[ "$USERNAME" != "" ]] gl_option[login]=$USERNAME
+	if [[ "$SOCKS_USERNAME" != "" ]] gl_option[login]=$SOCKS_USERNAME
+	if [[ "$SOCKS_PASSWORD" != "" ]] gl_option[pass]=$SOCKS_PASSWORD
+	if [[ "$ZSOUL_CONF" != "" ]] gl_option[conf]=$ZSOUL_CONF
+}
+
+function zs_option_conf {
+	#TODO
+}
+
+function zs_option_cli {
 	zparseopts -K -- p:=o_port s:=o_server o:=o_log l:=o_location \
-		x:=o_data h=o_help f:=o_conf d=o_debug
+		x:=o_data h=o_help f:=o_conf d=o_debug i=o_login
 	
 	if [[ $? != 0 || "$o_help" != "" ]]; then
-		echo Usage: $(basename "$0") "[-hd] [-s SERVER] [-p PORT] [-o LOGFILE] [-l LOCATION] [-m DATA]"
+		echo Usage: $(basename "$0") "[-hd] [-s SERVER] [-p PORT] [-o LOGFILE] [-l LOCATION] [-m DATA] [-i login]"
 		exit 64 #EX_USAGE
 	fi
 
-	if [[ "$o_debug" != "" ]] debug=1
-	
-	port=$o_port[2]
-	server=$o_server[2]
-	logfile=$o_log[2]
-	data=$o_data[2]
-	location=$o_location[2]
+	if [[ "$o_debug" != "" ]] gl_option[debug]=1
+	if [[ "$o_login" != "" ]] gl_option[login]=$o_login[2]
+	if [[ "$o_port" != "" ]] gl_option[port]=$o_port[2]
+	if [[ "$o_server" != "" ]] gl_option[host]=$o_server[2]
+	if [[ "$o_logfile" != "" ]] gl_option[log]=$o_log[2]
+	if [[ "$o_data" != "" ]] gl_option[data]=$o_data[2]
+	if [[ "$o_location" != "" ]] gl_option[location]=$o_location[2]
+
 }
 
 function zs_print_log {
@@ -48,7 +69,7 @@ function zs_print_log {
 
 function zs_connect {
 	#XXX: Error handling
-	ztcp $server $port
+	ztcp $gl_option[host] $gl_option[port]
 	fd=$REPLY
 	read -r ns_reply <&$fd
 	# ns_ret is an array with usefull values for authentification
@@ -60,20 +81,28 @@ function zs_init_auth {
 	read -r ns_reply <&$fd
 }
 
-#function zs_hash {
-#	echo `md5 -s "${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$SOCKS_PASSWORD" | cut -d ' ' -f 4`
-#}
+function zs_hash_bsd {
+	echo `md5 -s "${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" | cut -d ' ' -f 4`
+}
+
+function zs_hash_linux {
+	echo "${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}gl_option[pass]" | md5sum | cut -d ' ' -f 1
+}
 
 function zs_auth {
-	zs_init_auth	; if [[ $debug -eq 1 ]] print -r - $ns_reply
+	zs_init_auth	; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
 
-	local hash=`md5 -s "${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$SOCKS_PASSWORD" | cut -d ' ' -f 4`
-	print ext_user_log $SOCKS_USERNAME $hash "toto" "cul" >&$fd
+	local hash="$(zs_hash_$system)"
+	print ext_user_log $gl_option[login] $hash "toto" "cul" >&$fd
 	read -r ns_reply <&$fd
 }
 
-zs_parse_option $@
-zs_connect 	; if [[ $debug -eq 1 ]] print -r - $ns_reply
-zs_auth		; if [[ $debug -eq 1 ]] print -r - $ns_reply
+zs_option_env
+zs_option_conf
+zs_option_cli $@
+#TODO: Ask for password if unset here
+zs_connect 	; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
+zs_auth		; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
 
 ztcp -c $fd
+
