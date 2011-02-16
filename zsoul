@@ -30,8 +30,8 @@ gl_option[pass]=""
 gl_option[log]="/tmp/zsoul.log"
 gl_option[host]="ns-server.epita.fr"
 gl_option[port]="4242"
-gl_option[data]="ZSHAIL"
-gl_option[location]="Dans ton anus"
+gl_option[data]="zsoul"
+gl_option[location]="dans ton cul"
 gl_option[conf]=""
 
 trap "zs_close" INT
@@ -97,8 +97,8 @@ function zs_auth {
 	zs_init_auth
 
 	local hash="$(zs_hash_$system)"
-	printf "%s %s %s '%s' %s\n" ext_user_log $gl_option[login] $hash '`echo $gl_option[data]`' "cul" >&$fd
-	printf "%s %s %s '%s' %s\n" ext_user_log $gl_option[login] $hash "$gl_option[data]" "cul"
+	print ext_user_log $gl_option[login] $hash `zs_encode $gl_option[data]` `zs_encode $gl_option[location]` >&$fd
+	#print ext_user_log $gl_option[login] $hash `zs_encode $gl_option[data]` `zs_encode $gl_option[location]`
 	read -r ns_reply <&$fd
 	if [[ "$ns_reply" != "rep 002 -- cmd end" ]]; then
 		zs_print_log "Authentication does not succeed"
@@ -135,6 +135,10 @@ function zs_close {
 	ztcp -c $fd
 	zs_print_log "Bye"
 	exit 0
+}
+
+function zs_encode {
+	echo $1 | sed ':a;N;$!ba;s/\n/\\n/g' | sed s/' '/\%20/g | sed s/'	'/\%09/g
 }
 
 zs_option_env
