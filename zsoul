@@ -37,6 +37,7 @@ gl_option[conf]=""
 gl_option[debug]="0"
 
 function zs_option_env {
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0
 	if [[ "$LOGNAME" != "" ]] gl_option[login]=$LOGNAME
 	if [[ "$USERNAME" != "" ]] gl_option[login]=$USERNAME
 	if [[ "$SOCKS_USERNAME" != "" ]] gl_option[login]=$SOCKS_USERNAME
@@ -45,10 +46,13 @@ function zs_option_env {
 }
 
 function zs_option_conf {
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0
 	#TODO
 }
 
 function zs_option_cli {
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0
+
 	zparseopts -- p:=o_port s:=o_server o:=o_log l:=o_location \
 		x:=o_data h=o_help f:=o_conf d=o_debug i=o_login
 	
@@ -68,10 +72,12 @@ function zs_option_cli {
 }
 
 function zs_print_log {
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0 $1
 	print $1 >> $logfile
 }
 
 function zs_connect {
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0
 	#XXX: Error handling
 	ztcp $gl_option[host] $gl_option[port]
 	fd=$REPLY
@@ -81,7 +87,9 @@ function zs_connect {
 }
 
 function zs_init_auth {
-	echo auth_ag ext_user none none >&$fd
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0
+	#XXX: Error handling	
+	print auth_ag ext_user none none >&$fd
 	read -r ns_reply <&$fd
 }
 
@@ -94,7 +102,8 @@ function zs_hash_linux {
 }
 
 function zs_auth {
-	zs_init_auth	; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0
+	zs_init_auth	; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
 
 	local hash="$(zs_hash_$system)"
 	print \# $gl_option[login] $hash
@@ -106,8 +115,8 @@ zs_option_env
 zs_option_conf
 zs_option_cli $@
 #TODO: Ask for password if unset here
-zs_connect 	; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
-zs_auth		; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
+zs_connect 	; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
+zs_auth		; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
 
 ztcp -c $fd
 
