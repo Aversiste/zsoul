@@ -56,7 +56,7 @@ function zs_option_cli {
 	zparseopts h=o_help d=o_debug
 	
 	if [[ $? != 0 || "$o_help" != "" ]]; then
-		echo Usage: $(basename "$0") "[-hd]"
+		echo Usage: $(basename "$0") "[-dh] [file]"
 		exit 64 #EX_USAGE
 	fi
 
