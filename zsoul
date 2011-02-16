@@ -47,20 +47,25 @@ function zs_option_env {
 
 function zs_option_conf {
 	if [[ $gl_option[debug] -eq 1 ]] print \# $0
-	#TODO
+	if [[ -r "$gl_option[conf]" ]] source $gl_option[conf]
 }
 
 function zs_option_cli {
 	if [[ $gl_option[debug] -eq 1 ]] print \# $0
 
-	zparseopts -- h=o_help d=o_debug
+	zparseopts h=o_help d=o_debug
 	
 	if [[ $? != 0 || "$o_help" != "" ]]; then
 		echo Usage: $(basename "$0") "[-hd]"
 		exit 64 #EX_USAGE
 	fi
 
-	if [[ "$o_debug" != "" ]] gl_option[debug]=1
+	if [[ "$o_debug" != "" ]]; then
+		gl_option[debug]=1
+		OPTIND=$(( $OPTIND + 1 ))
+	fi
+
+	gl_option[conf]=$@[$OPTIND]
 }
 
 function zs_print_log {
