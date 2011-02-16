@@ -1,18 +1,19 @@
 #!/usr/bin/env zsh
 # Copyright (c) 2011 Tristan Le Guern <tristan.le-guern@epitech.eu>
 #
-# Permission to use, copy, modify, and distribute this software for any                                                                                                             
-# purpose with or without fee is hereby granted, provided that the above                                                                                                            
-# copyright notice and this permission notice appear in all copies.                                                                                                                 
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
 #
-# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES                                                                                                        
-# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF                                                                                                                  
-# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR                                                                                                           
-# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                                                                                                            
-# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN                                                                                                             
-# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF                                                                                                           
-# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.                                                                                                                    
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+set -e
 #set -x
 emulate -L zsh
 setopt no_sh_word_split null_glob no_ksh_arrays
@@ -34,7 +35,7 @@ gl_option[port]="4242"
 gl_option[data]="ZSHAIL"
 gl_option[location]="Dans ton anus"
 gl_option[conf]=""
-gl_option[debug]="0"
+gl_option[debug]="1"
 
 function zs_option_env {
 	if [[ "$LOGNAME" != "" ]] gl_option[login]=$LOGNAME
@@ -97,14 +98,15 @@ function zs_auth {
 	zs_init_auth	; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
 
 	local hash="$(zs_hash_$system)"
-	print \# $gl_option[login] $hash
+	echo HASH="${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" 
+	print ext_user_log $gl_option[login] $hash "toto" "cul"
 	print ext_user_log $gl_option[login] $hash "toto" "cul" >&$fd
 	read -r ns_reply <&$fd
 }
 
 zs_option_env
 zs_option_conf
-zs_option_cli $@
+#zs_option_cli $@
 #TODO: Ask for password if unset here
 zs_connect 	; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
 zs_auth		; if [[ $gl_option[debug] -eq 1 ]] print -r - $ns_reply
