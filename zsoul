@@ -107,9 +107,30 @@ function zs_auth {
 
 	local hash="$(zs_hash_$system)"
 	print \# HASH="${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" 
-	print ext_user_log $gl_option[login] $hash "toto" "cul"
+	print \# ext_user_log $gl_option[login] $hash "toto" "cul"
 	print ext_user_log $gl_option[login] $hash "toto" "cul" >&$fd
 	read -r ns_reply <&$fd
+}
+
+function zs_status {
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0
+	local zs_status
+	case $1 in
+		(actif | away | connection | idle | lock | server) zs_status=$1;;
+		(*) zs_status="none";;
+	esac
+
+	print user_cmd state $zs_status >&$fd
+}
+
+function zs_loop {
+	if [[ $gl_option[debug] -eq 1 ]] print \# $0
+	while true; do
+		read -r ns_reply <&$fd
+		if [[ "$ns_reply[1]" == "ping" ]];then
+			print $ns_reply[1] ns_reply[2] >&$fd
+		fi
+	done
 }
 
 zs_option_env
@@ -118,6 +139,7 @@ zs_option_conf
 #TODO: Ask for password if unset here
 zs_connect 	; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
 zs_auth		; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
+zs_status "actif"
+zs_loop
 
 ztcp -c $fd
-
