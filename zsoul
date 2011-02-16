@@ -103,8 +103,10 @@ function zs_auth {
 	zs_init_auth	; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
 
 	local hash="$(zs_hash_$system)"
-	print \# HASH="${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" 
-	print \# ext_user_log $gl_option[login] $hash "toto" "cul"
+	if [[ $gl_option[debug] -eq 1 ]];then
+		print \# HASH="${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" 
+		print \# ext_user_log $gl_option[login] $hash "toto" "cul"
+	fi
 	print ext_user_log $gl_option[login] $hash "toto" "cul" >&$fd
 	read -r ns_reply <&$fd
 }
