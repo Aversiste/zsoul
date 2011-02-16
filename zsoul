@@ -98,7 +98,7 @@ function zs_hash_bsd {
 }
 
 function zs_hash_linux {
-	echo "${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" | md5sum | cut -d ' ' -f 1
+	echo -n "${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" | md5sum | cut -d ' ' -f 1
 }
 
 function zs_auth {
