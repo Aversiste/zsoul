@@ -13,11 +13,10 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-set -e
-#set -x
 emulate -L zsh
 setopt no_sh_word_split null_glob no_ksh_arrays
 zmodload zsh/net/tcp
+set -e
 
 if [[ `which md5` == "md5 not found" ]];then
        	system=linux
@@ -34,51 +33,42 @@ gl_option[port]="4242"
 gl_option[data]="ZSHAIL"
 gl_option[location]="Dans ton anus"
 gl_option[conf]=""
-gl_option[debug]="0"
 
 trap "zs_close" INT
 trap "zs_option_conf" HUP
 
 function zs_option_env {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0
-	if [[ "$LOGNAME" != "" ]] gl_option[login]=$LOGNAME
-	if [[ "$USERNAME" != "" ]] gl_option[login]=$USERNAME
 	if [[ "$SOCKS_USERNAME" != "" ]] gl_option[login]=$SOCKS_USERNAME
 	if [[ "$SOCKS_PASSWORD" != "" ]] gl_option[pass]=$SOCKS_PASSWORD
 	if [[ "$ZSOUL_CONF" != "" ]] gl_option[conf]=$ZSOUL_CONF
 }
 
 function zs_option_conf {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0
-	if [[ -r "$gl_option[conf]" ]] source $gl_option[conf]
+	if [[ -r "$gl_option[conf]" ]];then
+		source $gl_option[conf]
+		zs_print_log "Load $gl_option[conf]"
+	else
+		zs_print_log "Unable to load $gl_option[conf]"
+	fi
 }
 
 function zs_option_cli {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0
-
-	zparseopts h=o_help d=o_debug
+	zparseopts h=o_help
 	
 	if [[ $? != 0 || "$o_help" != "" ]]; then
-		echo Usage: $(basename "$0") "[-dh] [file]"
+		echo Usage: $(basename "$0") "[-h] [file]"
 		exit 64 #EX_USAGE
 	fi
 
-	if [[ "$o_debug" != "" ]]; then
-		gl_option[debug]=1
-		OPTIND=$(( $OPTIND + 1 ))
-	fi
-
-	gl_option[conf]=$@[$OPTIND]
+	if [[ -n "$@[$OPTIND]" ]] gl_option[conf]=$@[$OPTIND]
 }
 
 function zs_print_log {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0 $1
-	print $1 >> $logfile
+	if [[ "$#1" -ne 0 ]] print "$1" >> $gl_option[log]
 }
 
 function zs_connect {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0
-	#XXX: Error handling
+	zs_print_log "Connection to $gl_option[host]:$gl_option[port]"
 	ztcp $gl_option[host] $gl_option[port]
 	fd=$REPLY
 	read -r ns_reply <&$fd
@@ -87,10 +77,12 @@ function zs_connect {
 }
 
 function zs_init_auth {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0
-	#XXX: Error handling	
 	print auth_ag ext_user none none >&$fd
 	read -r ns_reply <&$fd
+	if [[ "$ns_reply" != "rep 002 -- cmd end" ]]; then
+		zs_print_log "Authentication does not succeed"
+		zs_close
+	fi
 }
 
 function zs_hash_bsd {
@@ -102,48 +94,53 @@ function zs_hash_linux {
 }
 
 function zs_auth {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0
-	zs_init_auth	; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
+	zs_init_auth
 
 	local hash="$(zs_hash_$system)"
-	if [[ $gl_option[debug] -eq 1 ]];then
-		print \# HASH="${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" 
-		print \# ext_user_log $gl_option[login] $hash "toto" "cul"
-	fi
-	print ext_user_log $gl_option[login] $hash "toto" "cul" >&$fd
+	printf "%s %s %s '%s' %s\n" ext_user_log $gl_option[login] $hash '`echo $gl_option[data]`' "cul" >&$fd
+	printf "%s %s %s '%s' %s\n" ext_user_log $gl_option[login] $hash "$gl_option[data]" "cul"
 	read -r ns_reply <&$fd
+	if [[ "$ns_reply" != "rep 002 -- cmd end" ]]; then
+		zs_print_log "Authentication does not succeed"
+		zs_print_log $ns_reply[@]
+		zs_close
+	else
+		zs_print_log "Authentication succeed"
+	fi
+
 }
 
 function zs_status {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0
 	local zs_status
 	case $1 in
 		(actif | away | connection | idle | lock | server) zs_status=$1;;
 		(*) zs_status="none";;
 	esac
-
+	zs_print_log "Switch to status : $zs_status"
 	print user_cmd state $zs_status >&$fd
 }
 
 function zs_loop {
-	if [[ $gl_option[debug] -eq 1 ]] print \# $0
 	while true; do
 		read -r ns_reply <&$fd
 		if [[ "$ns_reply[1]" == "ping" ]];then
 			print $ns_reply[1] ns_reply[2] >&$fd
+		else
+			zs_print_log "Unknown command: $ns_reply[@]"
 		fi
 	done
 }
 
 function zs_close {
 	ztcp -c $fd
+	zs_print_log "Bye"
 	exit 0
 }
 
 zs_option_env
 zs_option_cli $@
 zs_option_conf
-zs_connect 	&& if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
-zs_auth		&& if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
+zs_connect
+zs_auth
 zs_status "actif"
 zs_loop
