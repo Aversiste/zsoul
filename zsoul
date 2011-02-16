@@ -36,6 +36,9 @@ gl_option[location]="Dans ton anus"
 gl_option[conf]=""
 gl_option[debug]="0"
 
+trap "zs_close" INT
+trap "zs_option_conf" HUP
+
 function zs_option_env {
 	if [[ $gl_option[debug] -eq 1 ]] print \# $0
 	if [[ "$LOGNAME" != "" ]] gl_option[login]=$LOGNAME
@@ -132,13 +135,15 @@ function zs_loop {
 	done
 }
 
+function zs_close {
+	ztcp -c $fd
+	exit 0
+}
+
 zs_option_env
 zs_option_cli $@
 zs_option_conf
-#TODO: Ask for password if unset here
 zs_connect 	&& if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
 zs_auth		&& if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
 zs_status "actif"
 zs_loop
-
-ztcp -c $fd
