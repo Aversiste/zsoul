@@ -19,7 +19,6 @@ emulate -L zsh
 setopt no_sh_word_split null_glob no_ksh_arrays
 zmodload zsh/net/tcp
 
-#XXX: Real check of system type
 if [[ `which md5` == "md5 not found" ]];then
        	system=linux
 else
@@ -107,7 +106,7 @@ function zs_auth {
 	zs_init_auth	; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
 
 	local hash="$(zs_hash_$system)"
-	echo HASH="${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" 
+	print \# HASH="${ns_ret[1]}-${ns_ret[2]}/${ns_ret[3]}$gl_option[pass]" 
 	print ext_user_log $gl_option[login] $hash "toto" "cul"
 	print ext_user_log $gl_option[login] $hash "toto" "cul" >&$fd
 	read -r ns_reply <&$fd
