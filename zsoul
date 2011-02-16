@@ -34,7 +34,7 @@ gl_option[port]="4242"
 gl_option[data]="ZSHAIL"
 gl_option[location]="Dans ton anus"
 gl_option[conf]=""
-gl_option[debug]="1"
+gl_option[debug]="0"
 
 function zs_option_env {
 	if [[ $gl_option[debug] -eq 1 ]] print \# $0
@@ -53,22 +53,14 @@ function zs_option_conf {
 function zs_option_cli {
 	if [[ $gl_option[debug] -eq 1 ]] print \# $0
 
-	zparseopts -- p:=o_port s:=o_server o:=o_log l:=o_location \
-		x:=o_data h=o_help f:=o_conf d=o_debug i=o_login
+	zparseopts -- h=o_help d=o_debug
 	
 	if [[ $? != 0 || "$o_help" != "" ]]; then
-		echo Usage: $(basename "$0") "[-hd] [-s SERVER] [-p PORT] [-o LOGFILE] [-l LOCATION] [-m DATA] [-i login]"
+		echo Usage: $(basename "$0") "[-hd]"
 		exit 64 #EX_USAGE
 	fi
 
 	if [[ "$o_debug" != "" ]] gl_option[debug]=1
-	if [[ "$o_login" != "" ]] gl_option[login]=$o_login[2]
-	if [[ "$o_port" != "" ]] gl_option[port]=$o_port[2]
-	if [[ "$o_server" != "" ]] gl_option[host]=$o_server[2]
-	if [[ "$o_logfile" != "" ]] gl_option[log]=$o_log[2]
-	if [[ "$o_data" != "" ]] gl_option[data]=$o_data[2]
-	if [[ "$o_location" != "" ]] gl_option[location]=$o_location[2]
-
 }
 
 function zs_print_log {
@@ -134,11 +126,11 @@ function zs_loop {
 }
 
 zs_option_env
+zs_option_cli $@
 zs_option_conf
-#zs_option_cli $@
 #TODO: Ask for password if unset here
-zs_connect 	; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
-zs_auth		; if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
+zs_connect 	&& if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
+zs_auth		&& if [[ $gl_option[debug] -eq 1 ]] print -r - \# $ns_reply
 zs_status "actif"
 zs_loop
 
