@@ -123,10 +123,12 @@ function zs_status {
 function zs_loop {
 	while true; do
 		read -r ns_reply <&$fd
-		if [[ "$ns_reply[1]" == "ping" ]];then
-			print $ns_reply[1] ns_reply[2] >&$fd
+		# changing ns_event to a local array cause a bug in zsh
+		ns_event=( $(echo $ns_reply) )
+		if [[ "${ns_event[1]}" == "ping" ]];then
+			print "`echo $ns_reply`" >&$fd
 		else
-			zs_print_log "Unknown command: $ns_reply[@]"
+			zs_print_log "Unknown command: $ns_reply"
 		fi
 	done
 }
