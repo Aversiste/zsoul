@@ -99,8 +99,7 @@ function zs_auth {
 	zs_init_auth
 
 	local hash="$(zs_hash_$system)"
-	print ext_user_log $gl_option[login] $hash `zs_encode $gl_option[data]` `zs_encode $gl_option[location]` >&$fd
-	#print ext_user_log $gl_option[login] $hash `zs_encode $gl_option[data]` `zs_encode $gl_option[location]`
+	print ext_user_log $gl_option[login] $hash `zs_encode $gl_option[location]` `zs_encode $gl_option[data]` >&$fd
 	read -r ns_reply <&$fd
 	if [[ "$ns_reply" != "rep 002 -- cmd end" ]]; then
 		zs_print_log "Authentication does not succeed"
@@ -142,10 +141,10 @@ function zs_close {
 }
 
 function zs_encode {
-	toto=`echo $1 | sed "s/%/\%25/g"`
-	toto=`echo $toto | sed "s/'/\%27/g"`
-	toto=`echo $toto | sed -r s/"([^a-zA-Z0-9_\.-\\%])"/" ;printf \"%%%x\" \"'&\"; echo -n "/g`
-	eval echo -n "$toto"
+	tmp=`echo $1 | sed "s/%/\%25/g"`
+	tmp=`echo $tmp | sed "s/'/\%27/g"`
+	tmp=`echo $tmp | sed -r s/"([^a-zA-Z0-9_\.-\\%])"/" ;printf \"%%%x\" \"'&\"; echo -n "/g`
+	eval echo -n "$tmp"
 }
 
 zs_option_env
