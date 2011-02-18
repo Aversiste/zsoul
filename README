@@ -1,3 +1,11 @@
-zsoul can't actualy be used as netsoul client.
+zsoul - a Netsoul client in ZSH
+===============================
 
+zsoul will look at some environnment variables and/or in a configuration
+file to get logging information.
 
+zsoul doesn't actually demonize itself but print his output in a log file[1].
+
+You can send him a SIGHUP forcing zsoul to reload his configuration file.
+
+1: /tmp/zsoul.log by default
