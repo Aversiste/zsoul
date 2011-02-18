@@ -24,6 +24,8 @@ else
 	system=bsd
 fi
 
+zsoul_name=$0
+
 typeset -A gl_option
 gl_option[login]=""
 gl_option[pass]=""
@@ -56,7 +58,7 @@ function zs_option_cli {
 	zparseopts h=o_help
 	
 	if [[ $? != 0 || "$o_help" != "" ]]; then
-		echo Usage: $(basename "$0") "[-h] [file]"
+		echo Usage: $(basename "$zsoul_name") "[-h] [file]"
 		exit 64 #EX_USAGE
 	fi
 
@@ -140,7 +142,10 @@ function zs_close {
 }
 
 function zs_encode {
-	echo $1 | sed ':a;N;$!ba;s/\n/\\n/g' | sed s/' '/\%20/g | sed s/'	'/\%09/g
+	toto=`echo $1 | sed "s/%/\%25/g"`
+	toto=`echo $toto | sed "s/'/\%27/g"`
+	toto=`echo $toto | sed -r s/"([^a-zA-Z0-9_\.-\\%])"/" ;printf \"%%%x\" \"'&\"; echo -n "/g`
+	eval echo -n "$toto"
 }
 
 zs_option_env
